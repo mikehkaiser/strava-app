@@ -11,23 +11,27 @@ interface activityProps{
     name?: string,
     type?: string,
     distance?: any,
-    date?: string,
-    coords?: any,
+    date?: string
+    coords?: any
+    
 };
 
-export const ActivityList = (props: activityProps) =>{
+interface routeProps{
+    name?: string
+    coords?: any
+};
+
+
+
+export const ActivityList = () =>{
     
     require('dotenv').config();
     const clientID=process.env.REACT_APP_CLIENT_ID;
     const clientSecret=process.env.REACT_APP_CLIENT_SECRET;
     const refreshToken=process.env.REACT_APP_REFRESH_TOKEN;
 
-
-
-    // const [activities, setActivities] = useState();
     const [actList, setactList] = useState<activityProps[]>([]);
-    // const [routes, setRoutes] = useState<routeProps[]>([]);
-    // const [center, setCenter] = useState();
+    const [routes, setRoutes] = useState<routeProps[]>([]);
 
     useEffect(() => {
         const fetchData = async() => {
@@ -36,8 +40,6 @@ export const ActivityList = (props: activityProps) =>{
                 ]);
 
             const stravaActivityResponse = await axios.get(`https://www.strava.com/api/v3/athlete/activities?access_token=${stravaAuthResponse[0].data.access_token}`);
-            console.log(stravaActivityResponse.data[0]);
-            
             //
             // Will need to put the gear fetch within the loop as well, but for now will leave out so it doesn't do 5 at a time
             //
@@ -47,13 +49,16 @@ export const ActivityList = (props: activityProps) =>{
             // const gearName = `${stravaGearResponse.data.brand_name} ${stravaGearResponse.data.model_name}`
             // console.log(gearName)
             
-            const activityList = [];
+            // have activityList here inside useEffect
+            var routeList = [];
+            var activityList = [];
             for(let i=0;i<10;i++){
-                const actName = stravaActivityResponse.data[i].name;
-                const actType = stravaActivityResponse.data[i].type;
-                const actDistance = ((stravaActivityResponse.data[i].distance)/1609.344).toFixed(1);
-                const actCoords = polyline.decode(stravaActivityResponse.data[i].map.summary_polyline.replace(/^"|"$/g, ''));
-                const startDate = (stravaActivityResponse.data[i].start_date).slice(0,10);
+                var actName = stravaActivityResponse.data[i].name;
+                var actType = stravaActivityResponse.data[i].type;
+                var actDistance = ((stravaActivityResponse.data[i].distance)/1609.344).toFixed(1);
+                // actCoords is the decoded polyline. This needs to get set dynamically with handlesetRoute event below
+                var actCoords = polyline.decode(stravaActivityResponse.data[i].map.summary_polyline.replace(/^"|"$/g, ''));
+                var startDate = (stravaActivityResponse.data[i].start_date).slice(0,10);
                 var year = startDate.slice(0,4);
                 var month = startDate.slice(5,7);
                 var day = startDate.slice(8,10);
@@ -84,21 +89,37 @@ export const ActivityList = (props: activityProps) =>{
                     strMonth = "Dec"
                 };
                 var actDate = `${strMonth} ${day}, ${year}`;
-                console.log(actDate)
+                // here coordinates get pushed to activityList
                 activityList.push({name: actName, type: actType, distance: actDistance, date: actDate, coords: actCoords});
+                routeList.push({name: actName, coords: actCoords});
             }
-            console.log(activityList);
+            
             setactList(activityList);
+            setRoutes(routeList);
         }; 
         fetchData();
     }, []);
-    
-    
+    //checking if activityList is available outside useEffect. It is not, because it only exists within useEffect, but I setactList to
+    // activityList, so actList == activityList
+    // on button click, setRoutes to include actCoords from this activity
+    // let handleshowRoutes = () =>{
+    //     null
+    // };
+
+    // currently clears the routes to an empty list again, and is repopulated upon refresh/rerender
+    // will be good if I want to clear the map
+    // I need to access the individual routes and be able to add them to routes onClick
+    // how to access routes - able to console.log individual routes inline in the return statement
+    let handleClearMap = () =>{
+        setRoutes([])
+    };
+
     return(
         <div>
             <Container>
                 <Row>
                     <Col className="listContainer" md={5} sm={12}>
+                    <Button onClick={handleClearMap}>Clear Map</Button>
                         {actList.map((activity, i) => (
                         <Accordion>
                             <Accordion.Item eventKey={{i}.toString()}>
@@ -109,8 +130,9 @@ export const ActivityList = (props: activityProps) =>{
                                     <h2>{activity.name}</h2>
                                     <p>Distance: {activity.distance} miles</p>
                                     <p>Activity Type: {activity.type}</p>
-                                    {/* Create onClick function to add polyline to map */}
-                                    <Button>See on Map</Button>
+                                    {/* Create onClick function to add polyline to map onClick={handlesetRoutes}*/}
+                                    <Button onClick={function(){console.log(routes[i].coords)}}>See on Map</Button>
+                                    <Button>Remove from Map</Button>
                                 </Accordion.Body>
                             </Accordion.Item>
                         </Accordion>   
@@ -122,11 +144,11 @@ export const ActivityList = (props: activityProps) =>{
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"/>
                     {/* Goal will be to pass these in via store as an onclick event */}
-                        {actList.map((activity, i) => (
-                        <Polyline key = {i} positions={activity.coords} pathOptions={{color: '#f78f07', opacity: 0.4}}>
+                        {routes.map((route, i) => ( //positions is based on route.coords state variable:prop
+                        <Polyline key={i} positions={route.coords} pathOptions={{color: '#f78f07', opacity: 0.4}}>
                             <Popup>
                                 <div>
-                                    <h2>{activity.name}</h2>
+                                    <h5>{route.name}</h5>
                                 </div>
                             </Popup>
                         </Polyline>
