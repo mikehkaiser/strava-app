@@ -28,7 +28,7 @@ export const Navigation =()=>{
                         <Navbar.Brand href="">Navbar</Navbar.Brand>
                         <Nav variant="tabs" className="mx-auto" defaultActiveKey="/home">
                             <Nav.Link className="mx-5" href="/home">Home</Nav.Link>
-                            <Nav.Link className="mx-5" href="">Activities</Nav.Link>
+                            <Nav.Link className="mx-5" href="/activities">Activities</Nav.Link>
                             <Button>Connect with Strava</Button>
                         </Nav>
                     </Navbar.Collapse>

@@ -6,10 +6,9 @@ import '../../index.css';
 
 
 export const Paths = () =>{
-    interface Route {
+    interface Props {
         activityCoords: any,
-        activityName: string,
-        
+        activityName: string
     }
     
     require('dotenv').config();
@@ -18,7 +17,7 @@ export const Paths = () =>{
     const refreshToken=process.env.REACT_APP_REFRESH_TOKEN;
 
     // const [activities, setActivities] = useState();
-    const [routes, setRoutes] = useState<Route[]>([]);
+    const [routes, setRoutes] = useState<Props[]>([]);
 
     useEffect(() => {
         const fetchData = async() => {
@@ -53,11 +52,11 @@ export const Paths = () =>{
     
     return(
         <>
-        {routes.map((route, i) => (
-        <Polyline key = {i} positions={route.activityCoords}>
+        {routes.map((props, i) => (
+        <Polyline key = {i} positions={props.activityCoords} pathOptions={{color: 'red', opacity: 0.3}}>
             <Popup>
                 <div>
-                    <h2>{"Name: " + route.activityName}</h2>
+                    <h2>{"Name: " + props.activityName}</h2>
                 </div>
             </Popup>
         </Polyline>
