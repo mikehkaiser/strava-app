@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
 import { Accordion, Button, Container, Row, Col } from 'react-bootstrap';
-import { MapContainer, TileLayer, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Popup, Polyline, LayersControl } from 'react-leaflet';
 import polyline from '@mapbox/polyline';
 
 //create the main class for displaying the activities
@@ -17,13 +17,11 @@ interface activityProps{
 };
 
 interface routeProps{
-    name?: string
+    name: string
     coords?: any
 };
 
-
-
-export const ActivityList = () =>{
+export const Activities = () =>{
     
     require('dotenv').config();
     const clientID=process.env.REACT_APP_CLIENT_ID;
@@ -32,6 +30,7 @@ export const ActivityList = () =>{
 
     const [actList, setactList] = useState<activityProps[]>([]);
     const [routes, setRoutes] = useState<routeProps[]>([]);
+    const [data,setData] = useState<any>({});
 
     useEffect(() => {
         const fetchData = async() => {
@@ -50,6 +49,8 @@ export const ActivityList = () =>{
             // console.log(gearName)
             
             // have activityList here inside useEffect
+            
+            var dataList = stravaActivityResponse.data;
             var routeList = [];
             var activityList = [];
             for(let i=0;i<10;i++){
@@ -96,30 +97,17 @@ export const ActivityList = () =>{
             
             setactList(activityList);
             setRoutes(routeList);
+            setData(dataList);
         }; 
         fetchData();
     }, []);
-    //checking if activityList is available outside useEffect. It is not, because it only exists within useEffect, but I setactList to
-    // activityList, so actList == activityList
-    // on button click, setRoutes to include actCoords from this activity
-    // let handleshowRoutes = () =>{
-    //     null
-    // };
-
-    // currently clears the routes to an empty list again, and is repopulated upon refresh/rerender
-    // will be good if I want to clear the map
-    // I need to access the individual routes and be able to add them to routes onClick
-    // how to access routes - able to console.log individual routes inline in the return statement
-    let handleClearMap = () =>{
-        setRoutes([])
-    };
 
     return(
         <div>
             <Container>
                 <Row>
                     <Col className="listContainer" md={5} sm={12}>
-                    <Button onClick={handleClearMap}>Clear Map</Button>
+                    
                         {actList.map((activity, i) => (
                         <Accordion>
                             <Accordion.Item eventKey={{i}.toString()}>
@@ -130,32 +118,32 @@ export const ActivityList = () =>{
                                     <h2>{activity.name}</h2>
                                     <p>Distance: {activity.distance} miles</p>
                                     <p>Activity Type: {activity.type}</p>
-                                    {/* Create onClick function to add polyline to map onClick={handlesetRoutes}*/}
-                                    <Button onClick={function(){console.log(routes[i].coords)}}>See on Map</Button>
-                                    <Button>Remove from Map</Button>
                                 </Accordion.Body>
                             </Accordion.Item>
                         </Accordion>   
                         ))}         
                     </Col>
-                    <Col className="MapContainer" md={6} sm={12}>
-                    <MapContainer center={[42.043, -87.928]} zoom={14} scrollWheelZoom={true}>
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"/>
-                    {/* Goal will be to pass these in via store as an onclick event */}
-                        {routes.map((route, i) => ( //positions is based on route.coords state variable:prop
-                        <Polyline key={i} positions={route.coords} pathOptions={{color: '#f78f07', opacity: 0.4}}>
-                            <Popup>
-                                <div>
-                                    <h5>{route.name}</h5>
-                                </div>
-                            </Popup>
-                        </Polyline>
-                        ))}
-                    
-                    {/* <Paths /> */}
-
+                    <Col className="MapContainer my-auto" md={5} sm={12}>
+                    <MapContainer center={[42.04, -87.9244]} zoom={13} scrollWheelZoom={true}>
+                    <LayersControl position="topright">
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"/>
+                        {/* Goal will be to pass these in via store as an onclick event */}
+                            {routes.map((route) => ( //positions is based on route.coords state variable:prop
+                            <LayersControl.Overlay name={route.name}>
+                            <Polyline key={route.name} positions={route.coords} pathOptions={{color: '#f78f07', opacity: 0.4}}>
+                                <Popup>
+                                    <div>
+                                        <h5>{route.name}</h5>
+                                    </div>
+                                </Popup>
+                            </Polyline>
+                            </LayersControl.Overlay>
+                            ))}
+                        
+                        {/* <Paths /> */}
+                        </LayersControl>
                     </MapContainer>
                     </Col>
                 </Row>
