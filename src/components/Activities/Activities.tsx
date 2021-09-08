@@ -1,23 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Accordion, Button, Container, Row, Col } from 'react-bootstrap';
-import { MapContainer, TileLayer, Popup, Polyline, LayersControl } from 'react-leaflet';
+import { Accordion, Container, Row, Col, Button } from 'react-bootstrap';
+import { MapContainer, TileLayer, Popup, Polyline } from 'react-leaflet';
 import polyline from '@mapbox/polyline';
+import { Navigation } from "..";
 
 //create the main class for displaying the activities
 
 interface activityProps{
-    name?: string,
-    type?: string,
+    actId?: any,
+    name?: any,
+    type?: any
     distance?: any,
-    date?: string
+    date?: string,
     coords?: any
     
 };
 
 interface routeProps{
-    name: string
+    routeId?:any,
+    name?: string,
     coords?: any
 };
 
@@ -30,30 +32,21 @@ export const Activities = () =>{
 
     const [actList, setactList] = useState<activityProps[]>([]);
     const [routes, setRoutes] = useState<routeProps[]>([]);
-    const [data,setData] = useState<any>({});
+    // const [data,setData] = useState<any>({});
 
     useEffect(() => {
-        const fetchData = async() => {
+        const fetchActivities = async() => {
             const stravaAuthResponse = await axios.all([
                 axios.post(`https://www.strava.com/oauth/token?client_id=${clientID}&client_secret=${clientSecret}&refresh_token=${refreshToken}&grant_type=refresh_token`)
                 ]);
 
+            
+            console.log(window.location.href)
             const stravaActivityResponse = await axios.get(`https://www.strava.com/api/v3/athlete/activities?access_token=${stravaAuthResponse[0].data.access_token}`);
-            //
-            // Will need to put the gear fetch within the loop as well, but for now will leave out so it doesn't do 5 at a time
-            //
-
-            // const actGear = stravaActivityResponse.data[0].gear_id
-            // const stravaGearResponse = await axios.get(`https://www.strava.com/api/v3/gear/${actGear}?access_token=${stravaAuthResponse[0].data.access_token}`);
-            // const gearName = `${stravaGearResponse.data.brand_name} ${stravaGearResponse.data.model_name}`
-            // console.log(gearName)
-            
-            // have activityList here inside useEffect
-            
-            var dataList = stravaActivityResponse.data;
-            var routeList = [];
+            console.log(stravaActivityResponse.data)
             var activityList = [];
             for(let i=0;i<10;i++){
+                var actId = stravaActivityResponse.data[i].id;
                 var actName = stravaActivityResponse.data[i].name;
                 var actType = stravaActivityResponse.data[i].type;
                 var actDistance = ((stravaActivityResponse.data[i].distance)/1609.344).toFixed(1);
@@ -91,60 +84,83 @@ export const Activities = () =>{
                 };
                 var actDate = `${strMonth} ${day}, ${year}`;
                 // here coordinates get pushed to activityList
-                activityList.push({name: actName, type: actType, distance: actDistance, date: actDate, coords: actCoords});
-                routeList.push({name: actName, coords: actCoords});
+                activityList.push({actId: actId, name: actName, type: actType, distance: actDistance, date: actDate, coords: actCoords});
+                
             }
             
             setactList(activityList);
-            setRoutes(routeList);
-            setData(dataList);
+            
         }; 
-        fetchData();
+        fetchActivities();
     }, []);
 
+    const activityAccordion = 
+        actList.map((activity, actId) => (
+            <Accordion>
+                <Accordion.Item eventKey={actId.toString()}>
+                    <Accordion.Header>
+                    {activity.date} | {activity.name}
+                    </Accordion.Header>
+                    <Accordion.Body>
+                        <h2>{activity.name}</h2>
+                        <p>Distance: {activity.distance} miles</p>
+                        <p>Activity Type: {activity.type}</p>
+                        <Button onClick={function(){setRoutes(routes => [...routes, {routeId: activity.actId, name: activity.name, coords: activity.coords}])}}>Add to map</Button>
+                        <Button onClick={function(){
+                            console.log(routes)
+                            const toDelete = routes.findIndex(route=>route.routeId === route)
+                            console.log(toDelete)
+                            
+                            
+                            }}
+        
+        
+        >Remove from map</Button>
+                    </Accordion.Body>
+                </Accordion.Item>
+            </Accordion>   
+    ));
+
+    const activityRoutes = 
+        routes.map((route, routeId) => ( //positions is based on route.coords state variable:prop
+            <Polyline key={routeId} positions={route.coords} pathOptions={{color: '#f78f07', opacity: 0.4}}>
+                <Popup>
+                    <div>
+                        <h5>{route.name}</h5>
+                    </div>
+                </Popup>
+            </Polyline>
+    ));
+
+    const handleClearMap=()=>{
+        setRoutes([])
+    }
+
+    console.log(routes)
+    // const handleRemoveRoute=(route:any)=>{
+    //     console.log(routes)
+    //     const toDelete = routes.indexOf(route)
+    //     console.log(toDelete)
+    //     setRoutes(routes.filter(routes[toDelete]))
+        
+    //     };
     return(
         <div>
+            <Navigation />
             <Container>
                 <Row>
                     <Col className="listContainer" md={5} sm={12}>
-                    
-                        {actList.map((activity, i) => (
-                        <Accordion>
-                            <Accordion.Item eventKey={{i}.toString()}>
-                                <Accordion.Header>
-                                {activity.date} | {activity.name}
-                                </Accordion.Header>
-                                <Accordion.Body>
-                                    <h2>{activity.name}</h2>
-                                    <p>Distance: {activity.distance} miles</p>
-                                    <p>Activity Type: {activity.type}</p>
-                                </Accordion.Body>
-                            </Accordion.Item>
-                        </Accordion>   
-                        ))}         
+                        {activityAccordion}
                     </Col>
                     <Col className="MapContainer my-auto" md={5} sm={12}>
                     <MapContainer center={[42.04, -87.9244]} zoom={13} scrollWheelZoom={true}>
-                    <LayersControl position="topright">
-                        <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"/>
-                        {/* Goal will be to pass these in via store as an onclick event */}
-                            {routes.map((route) => ( //positions is based on route.coords state variable:prop
-                            <LayersControl.Overlay name={route.name}>
-                            <Polyline key={route.name} positions={route.coords} pathOptions={{color: '#f78f07', opacity: 0.4}}>
-                                <Popup>
-                                    <div>
-                                        <h5>{route.name}</h5>
-                                    </div>
-                                </Popup>
-                            </Polyline>
-                            </LayersControl.Overlay>
-                            ))}
-                        
-                        {/* <Paths /> */}
-                        </LayersControl>
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                    />
+                            {activityRoutes}
                     </MapContainer>
+                    <Button onClick={handleClearMap}>Clear Activities</Button>
                     </Col>
                 </Row>
             </Container>
