@@ -95,9 +95,9 @@ export const Activities = () =>{
     }, []);
 
     const activityAccordion = 
-        actList.map((activity, actId) => (
+        actList.map((activity, index) => (
             <Accordion>
-                <Accordion.Item eventKey={actId.toString()}>
+                <Accordion.Item eventKey={index.toString()}>
                     <Accordion.Header>
                     {activity.date} | {activity.name}
                     </Accordion.Header>
@@ -108,14 +108,9 @@ export const Activities = () =>{
                         <Button onClick={function(){setRoutes(routes => [...routes, {routeId: activity.actId, name: activity.name, coords: activity.coords}])}}>Add to map</Button>
                         <Button onClick={function(){
                             console.log(routes)
-                            const toDelete = routes.findIndex(route=>route.routeId === route)
-                            console.log(toDelete)
-                            
-                            
                             }}
         
-        
-        >Remove from map</Button>
+                            >Remove from map</Button>
                     </Accordion.Body>
                 </Accordion.Item>
             </Accordion>   
