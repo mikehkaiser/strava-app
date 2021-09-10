@@ -4,6 +4,9 @@ import { Accordion, Container, Row, Col, Button } from 'react-bootstrap';
 import { MapContainer, TileLayer, Popup, Polyline } from 'react-leaflet';
 import polyline from '@mapbox/polyline';
 import { Navigation } from "..";
+import { makeStyles, createStyles } from "@material-ui/styles";
+import background from '../../assets/images/DSC02284.jpg';
+
 
 //create the main class for displaying the activities
 
@@ -13,22 +16,47 @@ interface activityProps{
     type?: any
     distance?: any,
     date?: string,
-    coords?: any
-    
+    coords?: any,
+    pace?: any
 };
 
 interface routeProps{
     routeId?:any,
     name?: string,
-    coords?: any
+    coords?: any,
+    pace: any,
+    distance:any
 };
 
+const useStyles = makeStyles(() =>
+    createStyles({
+        root:{
+            padding: '0',
+            margin: '0'
+        },
+        main: {
+            background: `url(${background})`,
+            width: '100%',
+            height: '100%',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            position: 'absolute',
+        },
+        main_scrim:{
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            backgroundSize: 'cover',
+            width: '100%',
+            height: '100%',
+        }
+}));
+
 export const Activities = () =>{
-    
     require('dotenv').config();
     const clientID=process.env.REACT_APP_CLIENT_ID;
     const clientSecret=process.env.REACT_APP_CLIENT_SECRET;
     const refreshToken=process.env.REACT_APP_REFRESH_TOKEN;
+    const classes = useStyles();
 
     const [actList, setactList] = useState<activityProps[]>([]);
     const [routes, setRoutes] = useState<routeProps[]>([]);
@@ -41,7 +69,7 @@ export const Activities = () =>{
                 ]);
 
             
-            console.log(window.location.href)
+            
             const stravaActivityResponse = await axios.get(`https://www.strava.com/api/v3/athlete/activities?access_token=${stravaAuthResponse[0].data.access_token}`);
             console.log(stravaActivityResponse.data)
             var activityList = [];
@@ -49,6 +77,7 @@ export const Activities = () =>{
                 var actId = stravaActivityResponse.data[i].id;
                 var actName = stravaActivityResponse.data[i].name;
                 var actType = stravaActivityResponse.data[i].type;
+                var actPace = (26.8224/(stravaActivityResponse.data[i].average_speed)).toFixed(2)
                 var actDistance = ((stravaActivityResponse.data[i].distance)/1609.344).toFixed(1);
                 // actCoords is the decoded polyline. This needs to get set dynamically with handlesetRoute event below
                 var actCoords = polyline.decode(stravaActivityResponse.data[i].map.summary_polyline.replace(/^"|"$/g, ''));
@@ -84,7 +113,7 @@ export const Activities = () =>{
                 };
                 var actDate = `${strMonth} ${day}, ${year}`;
                 // here coordinates get pushed to activityList
-                activityList.push({actId: actId, name: actName, type: actType, distance: actDistance, date: actDate, coords: actCoords});
+                activityList.push({actId: actId, name: actName, type: actType, pace: actPace, distance: actDistance, date: actDate, coords: actCoords});
                 
             }
             
@@ -94,9 +123,18 @@ export const Activities = () =>{
         fetchActivities();
     }, []);
 
+    // onClick={function(){
+    //     console.log(routes)
+    //     const thisRoute = routes[index];
+    //     console.log(thisRoute)
+    //     const newRoutes = routes.filter(routes=> routes !== thisRoute);
+    //     console.log(newRoutes)
+    //     setRoutes(newRoutes)
+    //     }}
+
     const activityAccordion = 
         actList.map((activity, index) => (
-            <Accordion>
+            <Accordion key={activity.actId}>
                 <Accordion.Item eventKey={index.toString()}>
                     <Accordion.Header>
                     {activity.date} | {activity.name}
@@ -105,11 +143,12 @@ export const Activities = () =>{
                         <h2>{activity.name}</h2>
                         <p>Distance: {activity.distance} miles</p>
                         <p>Activity Type: {activity.type}</p>
-                        <Button onClick={function(){setRoutes(routes => [...routes, {routeId: activity.actId, name: activity.name, coords: activity.coords}])}}>Add to map</Button>
-                        <Button onClick={function(){
-                            console.log(routes)
+                        <Button className="mx-2" variant="warning" onClick={function(){setRoutes(routes => [...routes, {routeId: activity.actId, distance: activity.distance, name: activity.name, pace: activity.pace, coords: activity.coords}])}}>Add to map</Button>
+                        <Button className="mx-2" variant="warning" onClick={function(){
+                            const thisRoute = activity
+                            const newRoutes = routes.filter(routes => routes.routeId !== thisRoute.actId)
+                            setRoutes(newRoutes)
                             }}
-        
                             >Remove from map</Button>
                     </Accordion.Body>
                 </Accordion.Item>
@@ -117,11 +156,12 @@ export const Activities = () =>{
     ));
 
     const activityRoutes = 
-        routes.map((route, routeId) => ( //positions is based on route.coords state variable:prop
-            <Polyline key={routeId} positions={route.coords} pathOptions={{color: '#f78f07', opacity: 0.4}}>
+        routes.map((route) => ( //positions is based on route.coords state variable:prop
+            <Polyline key={route.routeId} positions={route.coords} pathOptions={{color: '#f78f07', opacity: 0.4}}>
                 <Popup>
                     <div>
                         <h5>{route.name}</h5>
+                        <h5>{route.distance} miles at {route.pace} min/mile</h5>
                     </div>
                 </Popup>
             </Polyline>
@@ -129,25 +169,19 @@ export const Activities = () =>{
 
     const handleClearMap=()=>{
         setRoutes([])
-    }
+    };
 
-    console.log(routes)
-    // const handleRemoveRoute=(route:any)=>{
-    //     console.log(routes)
-    //     const toDelete = routes.indexOf(route)
-    //     console.log(toDelete)
-    //     setRoutes(routes.filter(routes[toDelete]))
-        
-    //     };
     return(
-        <div>
+        <div className={classes.root}>
+            <main className={classes.main}>
+                <div className={classes.main_scrim}>
             <Navigation />
             <Container>
                 <Row>
                     <Col className="listContainer" md={5} sm={12}>
                         {activityAccordion}
                     </Col>
-                    <Col className="MapContainer my-auto" md={5} sm={12}>
+                    <Col className="MapContainer my-5" md={5} sm={12}>
                     <MapContainer center={[42.04, -87.9244]} zoom={13} scrollWheelZoom={true}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -155,10 +189,12 @@ export const Activities = () =>{
                     />
                             {activityRoutes}
                     </MapContainer>
-                    <Button onClick={handleClearMap}>Clear Activities</Button>
+                    <Button variant="warning" onClick={handleClearMap}>Clear Activities</Button>
                     </Col>
                 </Row>
             </Container>
+        </div>
+        </main>
         </div>
     )
 

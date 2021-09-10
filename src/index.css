@@ -1,14 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300&display=swap');
+
 *, *::before, *::after{
     box-sizing: border-box
 }
 
 body{
+    background-color: '#a2a3a2';
     padding: 0;
     margin: 0
 }
 
 .leaflet-container{
     width: 50vw;
-    height: 30vw
+    height: 35vw
 }
 
