@@ -4,10 +4,13 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Activities, Gear, Home } from './components';
+import { FirebaseAppProvider } from 'reactfire';
+import { firebaseConfig } from './firebaseConfig';
 
 
 ReactDOM.render(
   <React.StrictMode>
+    <FirebaseAppProvider firebaseConfig={firebaseConfig}>
     <Router>
       <Switch>
 
@@ -26,7 +29,7 @@ ReactDOM.render(
 
       </Switch>
     </Router>
-    
+    </FirebaseAppProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );

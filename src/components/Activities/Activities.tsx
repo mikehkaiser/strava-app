@@ -36,19 +36,29 @@ const useStyles = makeStyles(() =>
         },
         main: {
             background: `url(${background})`,
+            backgroundAttachment: 'fixed',
             width: '100%',
             height: '100%',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            position: 'absolute',
+            backgroundPosition: 'center'
         },
         main_scrim:{
             backgroundColor: 'rgba(255, 255, 255, 0.5)',
             backgroundSize: 'cover',
             width: '100%',
             height: '100%',
+        },
+        map_holder:{
+            position: 'fixed'
+        },
+        activity_map:{
+            position: 'absolute',
+        },
+        act_accordion:{
+            marginTop: '0.2vw'
         }
+
 }));
 
 export const Activities = () =>{
@@ -79,7 +89,6 @@ export const Activities = () =>{
                 var actType = stravaActivityResponse.data[i].type;
                 var actPace = (26.8224/(stravaActivityResponse.data[i].average_speed)).toFixed(2)
                 var actDistance = ((stravaActivityResponse.data[i].distance)/1609.344).toFixed(1);
-                // actCoords is the decoded polyline. This needs to get set dynamically with handlesetRoute event below
                 var actCoords = polyline.decode(stravaActivityResponse.data[i].map.summary_polyline.replace(/^"|"$/g, ''));
                 var startDate = (stravaActivityResponse.data[i].start_date).slice(0,10);
                 var year = startDate.slice(0,4);
@@ -134,7 +143,7 @@ export const Activities = () =>{
 
     const activityAccordion = 
         actList.map((activity, index) => (
-            <Accordion key={activity.actId}>
+            <Accordion className={classes.act_accordion} key={activity.actId}>
                 <Accordion.Item eventKey={index.toString()}>
                     <Accordion.Header>
                     {activity.date} | {activity.name}
@@ -178,18 +187,22 @@ export const Activities = () =>{
             <Navigation />
             <Container>
                 <Row>
-                    <Col className="listContainer" md={5} sm={12}>
+                    <Col className="my-3" md={5} sm={12}>
                         {activityAccordion}
                     </Col>
-                    <Col className="MapContainer my-5" md={5} sm={12}>
-                    <MapContainer center={[42.04, -87.9244]} zoom={13} scrollWheelZoom={true}>
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                    />
-                            {activityRoutes}
-                    </MapContainer>
-                    <Button variant="warning" onClick={handleClearMap}>Clear Activities</Button>
+                    <Col className="MapContainer my-4" md={5} sm={12}>
+                        <div className={classes.map_holder}>
+                            <main className={classes.activity_map}>
+                            <MapContainer center={[42.04, -87.9244]} zoom={12} scrollWheelZoom={true}>
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                            />
+                                    {activityRoutes}
+                            </MapContainer>
+                            <Button className="my-1" variant="warning" onClick={handleClearMap}>Clear Activities</Button>
+                            </main>
+                        </div>
                     </Col>
                 </Row>
             </Container>

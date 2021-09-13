@@ -16,7 +16,6 @@ interface gearProps{
 const useStyles = makeStyles(() =>
     createStyles({
         root:{
-            backgroundColor:'#a2a3a2',
             padding: '0',
             margin: '0'
         },
@@ -51,12 +50,12 @@ const useStyles = makeStyles(() =>
         },
         main: {
             background: `url(${background})`,
+            backgroundAttachment: 'fixed',
             width: '100%',
             height: '100%',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            position: 'absolute',
+            backgroundPosition: 'center'
         },
         main_scrim:{
             backgroundColor: 'rgba(255, 255, 255, 0.5)',
@@ -162,9 +161,14 @@ export const Gear = () =>{
             </div>; 
 
     const bikeLocker = 
-        <div><h2>Bikes:</h2>
+        <div>
+            <h2>Bikes:</h2>
             {bikes.map((bike, index) => (
-            <h2>{bike.name}</h2>))}   
+            <>
+            <h3>{bike.name}</h3>
+            <h4>Distance traveled: {bike.distance} miles</h4>
+            </>
+            ))}   
         </div>;
 
     return(
@@ -176,10 +180,10 @@ export const Gear = () =>{
                 <Container>
                     <Row>
                         <div className={classes.mainContent}>
-                        <Col className="px-3">
+                        <Col className="px-3 md-6 my-2">
                         <div>{shoeLocker}</div>
                         </Col>
-                        <Col>
+                        <Col className="px-3 md-6 my-2">
                         <div>{bikeLocker}</div>
                         </Col>
                         </div>
