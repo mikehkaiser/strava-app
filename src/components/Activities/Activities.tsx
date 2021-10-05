@@ -70,7 +70,7 @@ export const Activities = () =>{
 
     const [actList, setactList] = useState<activityProps[]>([]);
     const [routes, setRoutes] = useState<routeProps[]>([]);
-    // const [data,setData] = useState<any>({});
+    
 
     useEffect(() => {
         const fetchActivities = async() => {
@@ -132,14 +132,6 @@ export const Activities = () =>{
         fetchActivities();
     }, []);
 
-    // onClick={function(){
-    //     console.log(routes)
-    //     const thisRoute = routes[index];
-    //     console.log(thisRoute)
-    //     const newRoutes = routes.filter(routes=> routes !== thisRoute);
-    //     console.log(newRoutes)
-    //     setRoutes(newRoutes)
-    //     }}
 
     const activityAccordion = 
         actList.map((activity, index) => (
@@ -152,11 +144,12 @@ export const Activities = () =>{
                         <h2>{activity.name}</h2>
                         <p>Distance: {activity.distance} miles</p>
                         <p>Activity Type: {activity.type}</p>
-                        <Button className="mx-2" variant="warning" onClick={function(){setRoutes(routes => [...routes, {routeId: activity.actId, distance: activity.distance, name: activity.name, pace: activity.pace, coords: activity.coords}])}}>Add to map</Button>
                         <Button className="mx-2" variant="warning" onClick={function(){
-                            const thisRoute = activity
-                            const newRoutes = routes.filter(routes => routes.routeId !== thisRoute.actId)
-                            setRoutes(newRoutes)
+                                setRoutes(routes => [...routes, {routeId: activity.actId, distance: activity.distance, name: activity.name, pace: activity.pace, coords: activity.coords}]);
+                            }}>Add to map</Button>
+                        <Button className="mx-2" variant="warning" onClick={function(){
+                            const newRoutes = routes.filter(routes => routes.routeId !== activity.actId)
+                            setRoutes(newRoutes);
                             }}
                             >Remove from map</Button>
                     </Accordion.Body>
@@ -212,3 +205,14 @@ export const Activities = () =>{
     )
 
 };
+
+console.log(window.location.href)
+let url = window.location.href
+
+export const cleanUpAuthToken = (str:any) => {
+    const check = str.split("&")[1].slice(5);
+    console.log(check);
+    return check;
+};
+
+cleanUpAuthToken(url)

@@ -21,7 +21,7 @@ export const Redirect = withRouter((props:SignInProps) =>{
             console.log(window.location.href);
             const tokens = await testAuthGetter(stravaAuthToken)
             console.log(tokens)
-
+            history.push("/activities")
             }
             catch (error) {
                 history.push("/");
