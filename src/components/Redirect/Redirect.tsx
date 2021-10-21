@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import _ from "lodash";
 import { RouteComponentProps, withRouter } from "react-router-dom";
-import { cleanUpAuthToken, getParamValues, testAuthGetter } from '../../utils/functions';
+import { cleanUpAuthToken, testAuthGetter } from '../../utils/functions';
 
 interface SignInProps{
     history: RouteComponentProps["history"];

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import _ from "lodash";
 import { Accordion, Container, Row, Col, Button } from 'react-bootstrap';
 import { MapContainer, TileLayer, Popup, Polyline } from 'react-leaflet';
 import polyline from '@mapbox/polyline';
 import { Navigation } from "..";
-import { makeStyles, createStyles } from "@material-ui/styles";
+import { makeStyles, createStyles, Theme } from "@material-ui/core/styles";
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { cleanUpAuthToken, testAuthGetter } from '../../utils/functions';
 import background from '../../assets/images/DSC02284.jpg';
 
 
@@ -28,20 +31,27 @@ interface routeProps{
     distance:any
 };
 
-const useStyles = makeStyles(() =>
+interface SignInProps{
+    history: RouteComponentProps["history"];
+    location: RouteComponentProps['location'];
+};
+
+const useStyles = makeStyles((theme:Theme) =>
     createStyles({
         root:{
-            padding: '0',
-            margin: '0'
+            width: '100%',
+        '& > * + *': {
+        marginTop: theme.spacing(2),
+        },
         },
         main: {
             background: `url(${background})`,
-            backgroundAttachment: 'fixed',
             width: '100%',
             height: '100%',
             backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center'
+            backgroundPosition: 'center',
+            position: 'absolute',
         },
         main_scrim:{
             backgroundColor: 'rgba(255, 255, 255, 0.5)',
@@ -61,7 +71,7 @@ const useStyles = makeStyles(() =>
 
 }));
 
-export const Activities = () =>{
+export const Activities = withRouter((props:SignInProps) =>{
     require('dotenv').config();
     const clientID=process.env.REACT_APP_CLIENT_ID;
     const clientSecret=process.env.REACT_APP_CLIENT_SECRET;
@@ -70,8 +80,29 @@ export const Activities = () =>{
 
     const [actList, setactList] = useState<activityProps[]>([]);
     const [routes, setRoutes] = useState<routeProps[]>([]);
-    
+    // const [buttonAble, setButtonAble] = useState(false)
+    const { history, location } = props
 
+    // useEffect(() => {
+    //     const authenticate = async () =>{
+    //         try{
+    //             if (_.isEmpty(location)){
+    //                 return history.push("/");
+    //             }
+    //             const stravaAuthToken = cleanUpAuthToken(window.location.href);
+    //             console.log(window.location.href);
+    //             const tokens = await testAuthGetter(stravaAuthToken)
+    //             console.log(tokens)
+    //             history.push("/activities")
+    //             }
+    //             catch (error) {
+    //                 history.push("/activities");
+    //             }
+    //         }
+    //         authenticate();
+        
+    //     });
+    
     useEffect(() => {
         const fetchActivities = async() => {
             const stravaAuthResponse = await axios.all([
@@ -132,6 +163,13 @@ export const Activities = () =>{
         fetchActivities();
     }, []);
 
+    // const handleDisable = () =>{
+    //     setButtonAble(true)
+    // };
+
+    // const handleAble = () => {
+    //     setButtonAble(false)
+    // }
 
     const activityAccordion = 
         actList.map((activity, index) => (
@@ -144,12 +182,13 @@ export const Activities = () =>{
                         <h2>{activity.name}</h2>
                         <p>Distance: {activity.distance} miles</p>
                         <p>Activity Type: {activity.type}</p>
-                        <Button className="mx-2" variant="warning" onClick={function(){
-                                setRoutes(routes => [...routes, {routeId: activity.actId, distance: activity.distance, name: activity.name, pace: activity.pace, coords: activity.coords}]);
+                        <Button className="mx-2" variant="warning" id={activity.actId.toString()} disabled={false} onClick={function(){
+                            setRoutes(routes => [...routes, {routeId: activity.actId, distance: activity.distance, name: activity.name, pace: activity.pace, coords: activity.coords}])
+                            
                             }}>Add to map</Button>
                         <Button className="mx-2" variant="warning" onClick={function(){
                             const newRoutes = routes.filter(routes => routes.routeId !== activity.actId)
-                            setRoutes(newRoutes);
+                            setRoutes(newRoutes)
                             }}
                             >Remove from map</Button>
                     </Accordion.Body>
@@ -204,15 +243,4 @@ export const Activities = () =>{
         </div>
     )
 
-};
-
-console.log(window.location.href)
-let url = window.location.href
-
-export const cleanUpAuthToken = (str:any) => {
-    const check = str.split("&")[1].slice(5);
-    console.log(check);
-    return check;
-};
-
-cleanUpAuthToken(url)
+});

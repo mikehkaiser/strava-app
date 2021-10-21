@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import '../../index.css';
-import { makeStyles, createStyles } from '@material-ui/core/styles';
+import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import axios from 'axios';
 import { Navigation } from "..";
 import Alert from 'react-bootstrap/Alert';
@@ -13,13 +13,23 @@ interface gearProps{
     distance?: number
 }
 
-const useStyles = makeStyles(() =>
+const useStyles = makeStyles((theme:Theme) =>
     createStyles({
         root:{
-            padding: '0',
-            margin: '0'
+            width: '100%',
+            '& > * + *': {
+            marginTop: theme.spacing(2),
+            },
+            },
+        main: {
+            background: `url(${background})`,
+            width: '100%',
+            height: '100%',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+            position: 'absolute',
         },
-
         progressBar:{
             width: "500px",
             height:"1.5em",
@@ -47,15 +57,6 @@ const useStyles = makeStyles(() =>
 
         changeMessage:{
             display:'none'
-        },
-        main: {
-            background: `url(${background})`,
-            backgroundAttachment: 'fixed',
-            width: '100%',
-            height: '100%',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center'
         },
         main_scrim:{
             backgroundColor: 'rgba(255, 255, 255, 0.5)',

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import '../../index.css'
 import Navbar from 'react-bootstrap/Navbar';
 import Col from "react-bootstrap/Col";
@@ -14,6 +14,7 @@ const redirectUrl = "http://localhost:3000/activities";
 
 export const handleLogin = () => {
     window.location.href = `http://www.strava.com/oauth/authorize?client_id=${clientID}&response_type=code&redirect_uri=${redirectUrl}/exchange_token&approval_prompt=auto&scope=profile:read_all,activity:read_all`;
+
 };
 
 export const Navigation =()=>{
